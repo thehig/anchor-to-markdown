@@ -13,7 +13,7 @@
 * Remove any colliding IDs
 * Save the HTML into `./data/bookmarks.html`
 * Create a `./data/config.json` file to specify your include and exclude filters
-* Navigate to the root of the project and run `npm install` followed by `node app/app.js`
+* Navigate to the root of the project and run `npm install` followed by `npm start`
 
 ### Example Bookmarks.html
 
@@ -37,7 +37,9 @@
 
 ```json
 {
-    "include": "react|uwp",
-    "exclude": "mail|netflix|reddit"
+    "input": "../data/bookmarks.html",
+    "output": "../data/bookmarks.md",
+    "exclude": [ "mail", "netflix", "reddit"],
+    "include": [ "react", "uwp"]
 }
 ```
