@@ -4,7 +4,7 @@
 
 > `./data/` folder is added to gitignore to ensure potentially sensitive bookmarks and/or configs are not accidentally committed. The application **will not work** without providing a data folder with config.json and target.html
 
-#### Converting Chrome History to HTML
+##### Converting Chrome History to HTML
 
 * Navigate to the Chrome History (chrome://history/) page
 * Inspect an element on the page to bring up the chrome dev tools
@@ -14,14 +14,14 @@
 * Wrap your copied divs into a single html page
 * Save the HTML into `./data/target.html`
 
-#### Converting HTML to Markdown
+##### Converting HTML to Markdown
 
 * Create a `./data/config.json` file to specify your include regexes, exclude regexes, file inputs & outputs
 * Navigate to the root of the project and run `npm install` followed by `npm start`
 
 **Simplest (useful) config.json possible:**
 
-> Will extract all anchors, convert to object format, remove items with unknown hostname and output to markdown file
+> Will extract all anchors, convert to object format and output to markdown file
 
 ```json
 {
@@ -42,16 +42,20 @@ Command | Output
 `npm start | grep '^\[\-\] Exclude'` | filter exclude `[-] Exclude`
 `npm start | grep '^\[+\] Include'` | filter include `[+] Include`
 
-### Example config.json
+--- 
 
-> Include and Exclude are regexes that will be matched (ignoring case) against an individual bookmarks url and text. Exclude is matched before include
+## config.json
+
+### Example
+
+> Include and Exclude are regexes that will be matched (ignoring case) against an individual anchor url and text. Exclude is matched before include
 
 **Note:** the inputFile and output locations are relative to the `/app/` folder
 
 ```json
 {
-    "inputFile": "../data/bookmarks.html",
-    "output": "../data/bookmarks.md",
+    "inputFile": "../data/target.html",
+    "output": "../data/target.md",
     "selector": "a",
     "includeUnknownInMD": false,
     "includeEmptyHostname": false,
@@ -70,28 +74,37 @@ Command | Output
 }
 ```
 
-Config Parameter | Effect
-:--- | :---
-selector | Items to select from the DOM for scraping
-exclude | Array of regexes to exclude from output
-include | Array of regexes to include in output
-includeUnknown | Toggle inclusion of unknown items
-includeEmptyHostname | Toggle inclusion of items with unknown hostname
-includeUnknownInMD | Toggle inclusion of items from the unknown category in the markdown output
-inputFile | File to read from
-output | File to write to
-markdownPreamble | What to write at the top of the markdown
+### Config Parameters
 
-Debug Parameter | Effect
+Parameter | Effect | Default
+:--- | :--- | :---
+selector | Items to select from the DOM for scraping | `'a'`
+exclude | Array of regexes to exclude from output | `[]`
+include | Array of regexes to include in output | `[]`
+includeUnknown | Toggle inclusion of unknown items | `false`
+includeEmptyHostname | Toggle inclusion of items with unknown hostname | `false`
+includeUnknownInMD | Toggle inclusion of items from the unknown category in the markdown output | `false`
+inputFile | File to read from | **REQUIRED**
+output | File to write to | **REQUIRED**
+markdownPreamble | What to write at the top of the markdown | `# Automated Item extraction\n\n`
+
+
+### Debug Parameters
+
+Parameter | Effect
 :--- | :---
-debugAllTheThings | Toggle all debug flags in one go
-logFn | Output the name of the function when called
-logScrape | Output the scrape process of whats included or excluded
-logRegexMatching | Output the regex matching process
-logFilter | Output filter include/exclude/unknown
-logMarkdown | Output the markdown to the console
-logReadWrite | Output the read and write targets
-verbose | Output more verbose output
+debugAllTheThings | Toggle all debug flags in one go (excluding verbose)
+logFn | Log the name of the function when called
+logScrape | Log the scrape process of whats included or excluded
+logRegexMatching | Log the regex matching process
+logFilter | Log filter include/exclude/unknown
+logMarkdown | Log the markdown to the console
+logReadWrite | Log the read and write targets
+verbose | Log more verbose output
+
+---
+
+## target.html
 
 ### Example target.html
 
@@ -109,7 +122,9 @@ verbose | Output more verbose output
 </html>
 ```
 
-### Future plans
+---
+
+## Future plans
 
 * Add support for more than anchors
 * Add prompt support to allow for useful invoking from CLI
