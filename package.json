@@ -1,16 +1,24 @@
 {
-  "name": "anchor-to-markdown",
-  "version": "0.0.3",
-  "description": "",
-  "main": "app/app.js",
-  "scripts": {
-    "debug": "node --inspect --debug-brk app\\app.js",
-    "start": "node app/app.js"
-  },
-  "author": "",
-  "license": "ISC",
-  "dependencies": {
-    "jsdom": "^9.8.3",
-    "lodash": "^4.17.2"
-  }
+    "name": "anchor-to-markdown",
+    "version": "0.0.3",
+    "description": "",
+    "main": "app/app.js",
+    "scripts": {
+        "debug": "node --inspect --debug-brk app\\app.js",
+        "start": "node app/app.js"
+    },
+    "dependencies": {
+        "jsdom": "^9.8.3",
+        "lodash": "^4.17.2"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/thehig/anchor-to-markdown.git"
+    },
+    "author": "David Higgins",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/thehig/anchor-to-markdown/issues"
+    },
+    "homepage": "https://github.com/thehig/anchor-to-markdown#readme"
 }
