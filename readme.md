@@ -1,4 +1,4 @@
-# Automated Chrome bookmark filter
+# Automated Chrome bookmark filter 0.0.5
 
 ## Usage
 
@@ -37,9 +37,21 @@
 
 ```json
 {
-    "input": "../data/bookmarks.html",
+    "inputFile": "../data/bookmarks.html",
     "output": "../data/bookmarks.md",
+    "includeUnknownInMD": false,
+    "includeEmptyHostname": false,
     "exclude": [ "mail", "netflix", "reddit"],
-    "include": [ "react", "uwp"]
+    "include": [ "react", "uwp"],
+    "debugAllTheThings": false,
+    "debug":{
+        "logFn": false,
+        "logScrape": false,
+        "logRegexMatching": false,
+        "logFilter": false,
+        "logMarkdown": false,
+        "logReadWrite": false,
+        "verbose": false
+    }
 }
 ```
