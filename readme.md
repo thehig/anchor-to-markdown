@@ -6,7 +6,7 @@
 
 #### Converting Chrome History to HTML
 
-* Navigate to the [Chrome History](chrome://history/) page
+* Navigate to the Chrome History (chrome://history/) page
 * Inspect an element on the page to bring up the chrome dev tools
 * Find the div labeled '#results-display'
 * Right click and copy the entire element into a text editor
@@ -20,6 +20,8 @@
 * Navigate to the root of the project and run `npm install` followed by `npm start`
 
 **Simplest (useful) config.json possible:**
+
+> Will extract all anchors, convert to object format, remove items with unknown hostname and output to markdown file
 
 ```json
 {
@@ -37,24 +39,8 @@
 Command | Output
 :--- | :---
 `npm start | grep '^\[?\] Unknown'` | filter unknown `[?] Unknown`
-`npm start | grep '^\[\-\] Exclude'` | filter unknown `[-] Exclude`
-`npm start | grep '^\[+\] Include'` | filter unknown `[+] Include`
-
-### Example target.html
-
-> Script will locate and scrape all <a> urls and text by default
-
-```html
-<!DOCTYPE html>
-<html>
-<head>
-    <title></title>
-</head>
-<body>
-    <div class="title"><a href="file:///C:/Users/David/Desktop/Bookmarks.html" id="id-0" target="_top" title="file:///C:/Users/David/Desktop/Bookmarks.html" focus-type="title" tabindex="0">file:///C:/Users/David/Desktop/Bookmarks.html</a></div>
-</body>
-</html>
-```
+`npm start | grep '^\[\-\] Exclude'` | filter exclude `[-] Exclude`
+`npm start | grep '^\[+\] Include'` | filter include `[+] Include`
 
 ### Example config.json
 
@@ -66,7 +52,7 @@ Command | Output
 {
     "inputFile": "../data/bookmarks.html",
     "output": "../data/bookmarks.md",
-    "selector": 'a',
+    "selector": "a",
     "includeUnknownInMD": false,
     "includeEmptyHostname": false,
     "exclude": [ "mail", "netflix", "reddit"],
@@ -106,6 +92,22 @@ logFilter | Output filter include/exclude/unknown
 logMarkdown | Output the markdown to the console
 logReadWrite | Output the read and write targets
 verbose | Output more verbose output
+
+### Example target.html
+
+> Script will locate and scrape all <a> (by default) urls and text
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+</head>
+<body>
+    <div class="title"><a href="file:///C:/Users/David/Desktop/Bookmarks.html" id="id-0" target="_top" title="file:///C:/Users/David/Desktop/Bookmarks.html" focus-type="title" tabindex="0">file:///C:/Users/David/Desktop/Bookmarks.html</a></div>
+</body>
+</html>
+```
 
 ### Future plans
 
