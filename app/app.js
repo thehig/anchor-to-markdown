@@ -34,7 +34,7 @@ let scrapeBookmarksAsync = window =>
                     text: $(value).text()
                 });
             });
-        }catch(err){
+        } catch(err){
             e(err);
         }
         c(titles);
@@ -61,8 +61,7 @@ let filterBookmarksAsync = bookmarks =>
                 else
                     filtered.unknown.push(bookmark);
             });
-        }
-        catch(err){ 
+        } catch(err){ 
             e(err); 
         }
         c(filtered);
