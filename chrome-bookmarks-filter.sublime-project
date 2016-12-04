@@ -13,6 +13,14 @@
             "folder_exclude_patterns": [],
             "path": "./app",
             "name": "app"
+        },
+
+
+        {
+            "file_exclude_patterns": [],
+            "folder_exclude_patterns": [],
+            "path": "./data",
+            "name": "data"
         }
     ]
 }
