@@ -1,4 +1,4 @@
-# Automated Chrome bookmark filter 0.0.5
+# Automated Chrome bookmark filter 0.0.6
 
 ## Usage
 
@@ -12,17 +12,37 @@
 * Right click and copy the entire element into a text editor
 * Repeat if you want to aggregate more than one history page
 * Wrap your copied divs into a single html page
-* Remove any colliding IDs
 * Save the HTML into `./data/target.html`
 
 #### Converting HTML to Markdown
 
-* Create a `./data/config.json` file to specify your include and exclude filters
+* Create a `./data/config.json` file to specify your include regexes, exclude regexes, file inputs & outputs
 * Navigate to the root of the project and run `npm install` followed by `npm start`
+
+**Simplest (useful) config.json possible:**
+
+```json
+{
+    "inputFile": "../data/target.html",
+    "output": "../data/target.md",
+    "includeUnknownInMD": true
+}
+```
+
+#### Showing specific fields using **logFilter**
+
+* In the config.json set `logFilter` to true
+* Grep the output based on the line preamble
+
+Command | Output
+:--- | :---
+`npm start | grep '^\[?\] Unknown'` | filter unknown `[?] Unknown`
+`npm start | grep '^\[\-\] Exclude'` | filter unknown `[-] Exclude`
+`npm start | grep '^\[+\] Include'` | filter unknown `[+] Include`
 
 ### Example target.html
 
-> Script will locate and scrape all <a> urls and text
+> Script will locate and scrape all <a> urls and text by default
 
 ```html
 <!DOCTYPE html>
@@ -46,6 +66,7 @@
 {
     "inputFile": "../data/bookmarks.html",
     "output": "../data/bookmarks.md",
+    "selector": 'a',
     "includeUnknownInMD": false,
     "includeEmptyHostname": false,
     "exclude": [ "mail", "netflix", "reddit"],
@@ -70,6 +91,7 @@ exclude | Array of regexes to exclude from output
 include | Array of regexes to include in output
 includeUnknown | Toggle inclusion of unknown items
 includeEmptyHostname | Toggle inclusion of items with unknown hostname
+includeUnknownInMD | Toggle inclusion of items from the unknown category in the markdown output
 inputFile | File to read from
 output | File to write to
 markdownPreamble | What to write at the top of the markdown
@@ -84,3 +106,9 @@ logFilter | Output filter include/exclude/unknown
 logMarkdown | Output the markdown to the console
 logReadWrite | Output the read and write targets
 verbose | Output more verbose output
+
+### Future plans
+
+* Add support for more than anchors
+* Add prompt support to allow for useful invoking from CLI
+* Add support for passing in a URI to suck out links

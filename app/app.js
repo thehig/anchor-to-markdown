@@ -32,42 +32,45 @@ const debug = {
     , verbose: config.debugAllTheThings || (startingConfig.debug && startingConfig.debug.verbose)                   // Output more verbose output
 }
 
-// Function to scrape a set of parameters from an item
-const scrapeItem = ($, index, value)=>{
-    if(debug.verbose && debug.logFn) console.log(`[*] scrapeItem($, ${index}, ${$(value).text()})`);
-    if(typeof config === undefined) return e(new Error("config not loaded in scrapeItem"));
+const anchor = {
+    // scrape a set of parameters from an item. index & text are required
+    scrape: ($, index, value)=>{
+        if(debug.verbose && debug.logFn) console.log(`[*] scrape($, ${index}, ${$(value).text()})`);
+        if(typeof config === undefined) return e(new Error("config not loaded in scrape"));
 
-    const item = {
-        index: index,                           // Keep track of index for potential sorting later on
-        url: $(value).attr('href'),
-        text: $(value).text(),
-        hostname: $(value).prop('hostname')     // An empty hostname can be a relative local link on a page eg: '/home/home.html'
-    };
+        // index & text are **REQUIRED** for sorting and filter tagging
+        const item = {
+            index: index,                           // Keep track of index for potential sorting later on
+            text: $(value).text(),
+            url: $(value).attr('href'),
+            hostname: $(value).prop('hostname')     // An empty hostname can be a relative local link on a page eg: '/home/home.html'
+        };
 
-    // Check for empty hostnames
-    if(config.includeEmptyHostname || item.hostname !== undefined && item.hostname.length > 0) {
-        if(debug.logScrape) console.log(`[+] Adding item: ${item.url}`);
-        return item;
-    } else {
-        if(debug.logScrape) console.log(`[-] Ignoring item due to blank hostname in: ${item.url}`);
-        return undefined;
+        // Check for empty hostnames
+        if(config.includeEmptyHostname || item.hostname !== undefined && item.hostname.length > 0) {
+            if(debug.logScrape) console.log(`[+] Adding item: ${item.url}`);
+            return item;
+        } else {
+            if(debug.logScrape) console.log(`[-] Ignoring item due to blank hostname in: ${item.url}`);
+            return undefined;
+        }
     }
-}
 
-// Function to check an items 'url' and 'text' against a regex
-const testRegex = (item, regex) => {
-    if(debug.logMyFunctions && debug.logFn) console.log(`[*] testRegex(item, ${regex})`);
-    const matchesUrl = regex.test(item.url);
-    const matchesText = regex.test(item.text);
-    if(debug.logRegexMatching){
-        if(matchesUrl) console.log(`[+] Regex ${regex} matches url "${item.url}"`);
-        if(matchesText) console.log(`[+] Regex ${regex} matches text "${item.text}"`);
+    // check an items 'url' and 'text' against a regex
+    , regex: (item, regex) => {
+        if(debug.logMyFunctions && debug.logFn) console.log(`[*] anchorRegex(item, ${regex})`);
+        const matchesUrl = regex.test(item.url);
+        const matchesText = regex.test(item.text);
+        if(debug.logRegexMatching){
+            if(matchesUrl) console.log(`[+] Regex ${regex} matches url "${item.url}"`);
+            if(matchesText) console.log(`[+] Regex ${regex} matches text "${item.text}"`);
+        }
+        return matchesUrl || matchesText;
     }
-    return matchesUrl || matchesText;
-}
 
-// Convert a given item into Markdown
-const itemToMarkdownLine = item => `* *(${item.hostname})* [${item.text}](${item.url})\n`;
+    // Convert a given item into Markdown
+    , markdown: item => `* *(${item.hostname})* [${item.text}](${item.url})\n`
+}
 
 // Read file specified by config.input and return the file contents
 const readFileAsync = () => new Promise((c, e)=>{
@@ -208,9 +211,9 @@ const writeFileAsync = inputString => new Promise((c, e)=>{
     });
 
 // Bind the scrape, regex and markdown functions to the appropriate higher order functions
-let scrapeMyItems = scrapeItemsAsync.bind(null, scrapeItem);
-let regexMyItems = regexItemsAsync.bind(null, testRegex);
-let markdownMyItems = createMarkdownAsync.bind(null, itemToMarkdownLine);
+let scrapeMyItems = scrapeItemsAsync.bind(null, anchor.scrape);
+let regexMyItems = regexItemsAsync.bind(null, anchor.regex);
+let markdownMyItems = createMarkdownAsync.bind(null, anchor.markdown);
 
 readFileAsync()
     .then(loadJsdomAsync)
