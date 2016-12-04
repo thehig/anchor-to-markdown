@@ -33,7 +33,7 @@
 
 ### Example config.json
 
-> Include and Exclude are regexes that will be matched (ignoring case) against an individual bookmarks url and text. Include is matched before exclude
+> Include and Exclude are regexes that will be matched (ignoring case) against an individual bookmarks url and text. Exclude is matched before include
 
 ```json
 {

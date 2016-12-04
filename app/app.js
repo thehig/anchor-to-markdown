@@ -28,11 +28,13 @@ let scrapeBookmarksAsync = window =>
         let titles = [];
         try{
             $('a').each((index, value)=>{
-                titles.push({
+                let anchor = {
                     index: index,
                     url: $(value).attr('href'),
-                    text: $(value).text()
-                });
+                    text: $(value).text(),
+                    hostname: $(value).prop('hostname')
+                };
+                titles.push(anchor);
             });
         } catch(err){
             e(err);
@@ -54,10 +56,10 @@ let filterBookmarksAsync = bookmarks =>
 
         try{
             bookmarks.forEach((bookmark)=>{
-                if(includeRegex.test(bookmark.url) || includeRegex.test(bookmark.text)) 
-                    filtered.include.push(bookmark);
-                else if(excludeRegex.test(bookmark.url) || excludeRegex.test(bookmark.text)) 
+                if(excludeRegex.test(bookmark.url) || excludeRegex.test(bookmark.text)) 
                     filtered.exclude.push(bookmark);
+                else if(includeRegex.test(bookmark.url) || includeRegex.test(bookmark.text)) 
+                    filtered.include.push(bookmark);
                 else
                     filtered.unknown.push(bookmark);
             });
@@ -67,22 +69,26 @@ let filterBookmarksAsync = bookmarks =>
         c(filtered);
     });
 
-let printBookmark = (maxText, maxUrl, bookmark) => `${bookmark.index} :\t${bookmark.text.substring(0, maxText)} --\t${bookmark.url.substring(0, maxUrl)}`;
+let reverseListAync = list => Promise.resolve(list.reverse());
+
+let printBookmark = (maxText, maxUrl, bookmark) => 
+    `${bookmark.index} :\t${bookmark.text.substring(0, maxText)} --\t${bookmark.url.substring(0, maxUrl)}`;
 
 let printShort = printBookmark.bind(null, 50, 30);
 let printLong = printBookmark.bind(null, 1000, 1000);
 let printTextOnly = printBookmark.bind(null, 1000, 0);
 let printUrlOnly = printBookmark.bind(null, 0, 1000);
 
+let generateMarkdownFromBookmark = (previous, bookmark) => 
+    "" + previous + `* *(${bookmark.hostname})* [${bookmark.text}](${bookmark.url})\n`;
+
 let createMarkdownAsync = filteredBookmarks =>
     new Promise((c, e)=>{
         if(typeof filteredBookmarks === undefined) e(new Error("No bookmarks from filterBookmarksAsync"));
 
-        let outputMarkdown = "# Automated bookmark filtration\n\n";
+        let outputMarkdown = "";
         try{
-            filteredBookmarks.include.forEach((inc)=>{
-                outputMarkdown += `* [${inc.text}](${inc.url})\n`;
-            });
+            outputMarkdown = filteredBookmarks.include.reduce(generateMarkdownFromBookmark, "# Automated bookmark filtration\n\n");
         } catch(err){
             e(err);
         }
@@ -101,6 +107,7 @@ let outputMarkdownAsync = markdownText =>
 readFileAsync('../data/bookmarks.html')
     .then(loadJsdomAsync)
     .then(scrapeBookmarksAsync)
+    .then(reverseListAync)
     .then(filterBookmarksAsync)
     .then(createMarkdownAsync)
     .then(outputMarkdownAsync)
