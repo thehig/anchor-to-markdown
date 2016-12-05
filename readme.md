@@ -1,4 +1,4 @@
-# Automated Chrome bookmark filter 0.0.6
+# Anchor to Markdown converter 0.0.8
 
 ## Usage
 
@@ -19,11 +19,11 @@
 * Create a `./data/config.json` file to specify your include regexes, exclude regexes, file inputs & outputs
 * Navigate to the root of the project and run `npm install` followed by `npm start`
 
-**Simplest (useful) config.json possible:**
+**Simplest (useful) config.js possible:**
 
 > Will extract all anchors, convert to object format and output to markdown file
 
-```json
+```javascript
 {
     "inputFile": "../data/target.html",
     "output": "../data/target.md",
@@ -33,18 +33,18 @@
 
 #### Showing specific fields using **logFilter**
 
-* In the config.json set `logFilter` to true
+* In the config.js set `logFilter` to true
 * Grep the output based on the line preamble
 
-Command | Output
+Command | Filters
 :--- | :---
-`npm start | grep '^\[?\] Unknown'` | filter unknown `[?] Unknown`
-`npm start | grep '^\[\-\] Exclude'` | filter exclude `[-] Exclude`
-`npm start | grep '^\[+\] Include'` | filter include `[+] Include`
+`npm start | grep '^\[?\] Unknown'` |`[?] Unknown`
+`npm start | grep '^\[\-\] Exclude'` |`[-] Exclude`
+`npm start | grep '^\[+\] Include'` |`[+] Include`
 
 --- 
 
-## config.json
+## config.js
 
 ### Example
 
@@ -52,7 +52,7 @@ Command | Output
 
 **Note:** the inputFile and output locations are relative to the `/app/` folder
 
-```json
+```javascript
 {
     "inputFile": "../data/target.html",
     "output": "../data/target.md",
@@ -126,6 +126,6 @@ verbose | Log more verbose output
 
 ## Future plans
 
-* Add support for more than anchors
 * Add prompt support to allow for useful invoking from CLI
 * Add support for passing in a URI to suck out links
+* Remove dependance on jQuery http request

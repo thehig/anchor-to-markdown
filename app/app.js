@@ -1,14 +1,50 @@
-const   jsdom = require("jsdom")
-        , fs = require('fs')
-        , path = require('path')
-        , _ = require('lodash')
-        , startingConfig = require('../data/config.json')
+const startingConfig = require('../data/config-li.js')
         , version = require('../package.json').version;
 
 console.log(`=== Item to Markdown v${version} ===\n`);
 
+const defaultAnchor = {
+        // scrape a set of parameters from an item. index & text are required
+        scrape: (config, debug, $, index, value)=>{
+            if(debug.verbose && debug.logFn) console.log(`[*] scrape($, ${index}, ${$(value).text()})`);
+            if(typeof config === undefined) return e(new Error("config not loaded in scrape"));
+
+            // index & text are **REQUIRED** for sorting and filter tagging
+            const item = {
+                index: index,                           // Keep track of index for potential sorting later on
+                text: $(value).text(),
+                url: $(value).attr('href'),
+                hostname: $(value).prop('hostname')     // An empty hostname can be a relative local link on a page eg: '/home/home.html'
+            };
+
+            // Check for empty hostnames
+            if(config.includeEmptyHostname || item.hostname !== undefined && item.hostname.length > 0) {
+                if(debug.logScrape) console.log(`[+] Adding item: ${item.url}`);
+                return item;
+            } else {
+                if(debug.logScrape) console.log(`[-] Ignoring item due to blank hostname in: ${item.url}`);
+                return undefined;
+            }
+        },
+
+        // check an items 'url' and 'text' against a regex
+        regex: (config, debug, item, regex) => {
+            if(debug.verbose && debug.logFn) console.log(`[*] anchorRegex(item, ${regex})`);
+            const matchesUrl = regex.test(item.url);
+            const matchesText = regex.test(item.text);
+            if(debug.logRegexMatching){
+                if(matchesUrl) console.log(`[+] Regex ${regex} matches url "${item.url}"`);
+                if(matchesText) console.log(`[+] Regex ${regex} matches text "${item.text}"`);
+            }
+            return matchesUrl || matchesText;
+        },
+
+        // Convert a given item into Markdown
+        markdown: (config, debug, item) => `* *(${item.hostname})* [${item.text}](${item.url})\n`
+}
+
 // TODO: Consider using some form of Object.assign({})
-const config = {
+let config = {
     debugAllTheThings: startingConfig.debugAllTheThings                                                             // Toggle all debug flags in one go
 
     , selector: startingConfig.selector || 'a'                                                                      // Items to select from the DOM
@@ -19,7 +55,7 @@ const config = {
 
     , input: startingConfig.inputFile                                                                               // File to read from
     , output: startingConfig.output                                                                                 // File to write to
-    , markdownPreamble: startingConfig.outputPreamble || "# Automated Item extraction\n\n"                        // What to write at the top of the markdown
+    , markdownPreamble: startingConfig.outputPreamble || "# Automated Item extraction\n\n"                          // What to write at the top of the markdown
 }
 
 const debug = {
@@ -32,191 +68,20 @@ const debug = {
     , verbose: config.debugAllTheThings || (startingConfig.debug && startingConfig.debug.verbose)                   // Output more verbose output
 }
 
-const anchor = {
-    // scrape a set of parameters from an item. index & text are required
-    scrape: ($, index, value)=>{
-        if(debug.verbose && debug.logFn) console.log(`[*] scrape($, ${index}, ${$(value).text()})`);
-        if(typeof config === undefined) return e(new Error("config not loaded in scrape"));
+// Bind the config and debug options for the scrape, regex & markdown functions
+config.scrape = (startingConfig.scrape ? startingConfig.scrape : defaultAnchor.scrape).bind(null, config, debug);
+config.regex = (startingConfig.regex ? startingConfig.regex : defaultAnchor.regex).bind(null, config, debug);
+config.markdown = (startingConfig.markdown ? startingConfig.markdown : defaultAnchor.markdown).bind(null, config, debug);
 
-        // index & text are **REQUIRED** for sorting and filter tagging
-        const item = {
-            index: index,                           // Keep track of index for potential sorting later on
-            text: $(value).text(),
-            url: $(value).attr('href'),
-            hostname: $(value).prop('hostname')     // An empty hostname can be a relative local link on a page eg: '/home/home.html'
-        };
-
-        // Check for empty hostnames
-        if(config.includeEmptyHostname || item.hostname !== undefined && item.hostname.length > 0) {
-            if(debug.logScrape) console.log(`[+] Adding item: ${item.url}`);
-            return item;
-        } else {
-            if(debug.logScrape) console.log(`[-] Ignoring item due to blank hostname in: ${item.url}`);
-            return undefined;
-        }
-    }
-
-    // check an items 'url' and 'text' against a regex
-    , regex: (item, regex) => {
-        if(debug.logMyFunctions && debug.logFn) console.log(`[*] anchorRegex(item, ${regex})`);
-        const matchesUrl = regex.test(item.url);
-        const matchesText = regex.test(item.text);
-        if(debug.logRegexMatching){
-            if(matchesUrl) console.log(`[+] Regex ${regex} matches url "${item.url}"`);
-            if(matchesText) console.log(`[+] Regex ${regex} matches text "${item.text}"`);
-        }
-        return matchesUrl || matchesText;
-    }
-
-    // Convert a given item into Markdown
-    , markdown: item => `* *(${item.hostname})* [${item.text}](${item.url})\n`
-}
-
-// Read file specified by config.input and return the file contents
-const readFileAsync = () => new Promise((c, e)=>{
-        if(debug.logFn) console.log(`[*] readFileAsync()`);
-        if(typeof config === undefined) return e(new Error("config not loaded in readFileAsync"));
-        if(typeof config.input === undefined) return e(new Error("config.input not loaded in readFileAsync"));
-
-        const filePath = path.resolve(__dirname, config.input);
-        if(debug.logReadWrite) console.log(`[+] Reading input from ${filePath}`);
-        fs.readFile(filePath, "utf-8", (err, data)=>{
-            if(debug.logReadWrite) console.log(`[+] Reading input complete`);
-            err ? e(err) : c(data);
-        });
-    });
-
-// Load in a html file, inject jquery, create and return the DOM
-const loadJsdomAsync = html => new Promise((c, e)=>{
-        if(debug.logFn) console.log(`[*] loadJsdomAsync()`);
-        if(typeof html === undefined) return e(new Error("No HTML in loadJsdomAsync"));
-        jsdom.env(html, ["http://code.jquery.com/jquery.js"], (err, window)=>{
-            err ? e(err) : c(window);
-        });
-    });
-
-// Use jQuery to convert all <a> into objects
-const scrapeItemsAsync = (scrapeItemFn, window) => new Promise((c, e)=>{
-        if(debug.logFn) console.log(`[*] scrapeItemsAsync()`);
-        if(typeof scrapeItemFn !== "function") return e(new Error("No scrapeItemFn in scrapeItemsAsync"));
-        if(typeof window === undefined) return e(new Error("No window in scrapeItemsAsync"));
-        if(typeof window.$ === undefined) return e(new Error("No jquery in scrapeItemsAsync"));
-        if(typeof config === undefined) return e(new Error("No config loaded in scrapeItemsAsync"));
-        if(typeof config.selector === undefined) return e(new Error("No config.selector loaded in scrapeItemsAsync"));
-        const $ = window.$;
-        let items = [];
-        try{
-            // Bind jQuery into the scrapeItem for pure function goodness
-            let scrapedItems = $(config.selector).each((index, value)=>{
-                var item = scrapeItemFn($, index, value);
-                if(item) items.push(item);
-            });
-        } catch(err){
-            e(err);
-        }
-        c(items);
-    });
-
-// Filter the item collection by regexes in config.include and config.exclude
-const regexItemsAsync = (regexTestFn, items) => new Promise((c, e)=>{
-        if(debug.logFn) console.log(`[*] regexItemsAsync(${items.length} items)`);
-        if(typeof regexTestFn !== "function") return e(new Error("No regexTestFn in regexItemsAsync"));
-        if(typeof items === undefined) return e(new Error("No items in regexItemsAsync"));
-        if(typeof config === undefined) return e(new Error("No config loaded"));
-        if(typeof config.include === undefined) return e(new Error("No config.include loaded in regexItemsAsync"));
-        if(typeof config.exclude === undefined) return e(new Error("No config.exclude loaded in regexItemsAsync"));
-
-        // Convert our provided strings into regexes (ignoring case)
-        const createRegex = regexString => new RegExp(regexString, 'i');
-        const includeRegexs = config.include.map(createRegex);
-        const excludeRegexs = config.exclude.map(createRegex);
-
-        // Structure to hold the sorted data
-        let sorted = {
-            include: [],
-            exclude: [],
-            unknown: []
-        }
-        
-        try{
-            items.forEach((item)=>{
-                // Use the regexTestFn
-                const testItem = regexTestFn.bind(null, item); // Bind on the item so we can inline the _.some call
-                if(_.some(excludeRegexs, testItem)){
-                    if(debug.logFilter) console.log(`[-] Exclude:\t"${item.text}"`);
-                    sorted.exclude.push(item);
-                }
-                else if(_.some(includeRegexs, testItem)){
-                    if(debug.logFilter) console.log(`[+] Include:\t"${item.text}"`);
-                    sorted.include.push(item);
-                }
-                else{
-                    if(debug.logFilter) console.log(`[?] Unknown:\t"${item.text}"`);
-                    sorted.unknown.push(item);
-                }
-            });
-        } catch(err){ 
-            e(err); 
-        }
-        c(sorted);
-    });
-
-// From the sortedItems, convert the 'include' items into markdown
-const createMarkdownAsync = (convertToMarkdownFn, sortedItems) => new Promise((c, e)=>{
-        if(debug.logFn) console.log(`[*] createMarkdownAsync(${sortedItems.include.length} include items)`);
-        if(typeof convertToMarkdownFn !== "function") return e(new Error("No convertToMarkdownFn in createMarkdownAsync"));
-        if(typeof sortedItems === undefined) return e(new Error("No sortedItems in createMarkdownAsync"));
-        if(typeof config === undefined) return e(new Error("No config loaded in createMarkdownAsync"));
-        if(typeof config.markdownPreamble === undefined) return e(new Error("No config.markdownPreamble loaded in createMarkdownAsync"));
-
-        // Take the include, and optionally the unknown
-        let sourceList = [].concat(sortedItems.include);
-        if(config.includeUnknown) {
-            if(debug.logMarkdown) console.log(`[+] Including ${sortedItems.unknown.length} unknown items in markdown`);
-            sourceList = sourceList.concat(sortedItems.unknown);
-        }
-
-        // Sort in order with the lowest index first (config.invertOrder switches the sorting order)
-        sourceList = sourceList.sort((a, b)=> {return config.invertOrder ? b.index - a.index : a.index - b.index;});
-
-        // Convert each item into a MD entry
-        let outputMarkdown = "";
-        try{
-            outputMarkdown = sourceList.reduce((previous, item) => {
-                // Use the convertToMarkdownFn to convert item into a markdown respective format
-                return "" + previous + convertToMarkdownFn(item);
-            }, config.markdownPreamble);
-        } catch(err){
-            e(err);
-        }
-
-        if(debug.logMarkdown) console.log(`[*] ===== Output Markdown =====\n${outputMarkdown}\n[*] ==== /Output Markdown/ ====`);
-        c(outputMarkdown);
-    });
-
-// Write the text in inputString to the file specified by config.input
-const writeFileAsync = inputString => new Promise((c, e)=>{
-        if(debug.logFn) console.log(`[*] writeFileAsync(${config.output})`);
-        if(typeof inputString === undefined) return e(new Error("No inputString in writeFileAsync"));
-        if(typeof config === undefined) return e(new Error("config not loaded in writeFileAsync"));
-        if(typeof config.output === undefined) return e(new Error("config.output not loaded in writeFileAsync"));
-
-        const filePath = path.resolve(__dirname, config.output);
-        if(debug.logReadWrite) console.log(`[+] Writing output to ${filePath}`);
-        
-        fs.writeFile(filePath, inputString, {flags: 'w'}, (err)=>{
-            if(debug.logReadWrite) console.log(`[+] Writing output complete`);
-            err ? e(err) : c();
-        });
-    });
+const lib = require('./lib.js')(config, debug);
 
 // Bind the scrape, regex and markdown functions to the appropriate higher order functions
-let scrapeMyItems = scrapeItemsAsync.bind(null, anchor.scrape);
-let regexMyItems = regexItemsAsync.bind(null, anchor.regex);
-let markdownMyItems = createMarkdownAsync.bind(null, anchor.markdown);
+let scrapeMyItems = lib.scrapeItemsAsync.bind(null, config.scrape);
+let regexMyItems = lib.regexItemsAsync.bind(null, config.regex);
+let markdownMyItems = lib.createMarkdownAsync.bind(null, config.markdown);
 
-readFileAsync()
-    .then(loadJsdomAsync)
+lib.readFileAsync()
+    .then(lib.loadJsdomAsync)
     .then(scrapeMyItems)
     .then ( items => {
         console.log(`[+] Scraped ${items.length} items`);
@@ -231,7 +96,7 @@ readFileAsync()
         return items;
     })
     .then(markdownMyItems)
-    .then(writeFileAsync)
+    .then(lib.writeFileAsync)
     .then(()=>{
         console.log("[+] Complete");
     })
