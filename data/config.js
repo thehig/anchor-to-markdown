@@ -1,22 +1,25 @@
-let generateConfig = ()=>{
-    return {
-        "inputFile": "../data/target.html",
-        "output": "../data/target.md",
-        "includeUnknownInMD": true,
-        "includeEmptyHostname": true,
-        "exclude": [ "mail", "netflix", "reddit"],
-        "include": [ "react", "uwp"],
-        "debugAllTheThings": false, 
-        "debug":{
-            "logFn": false,
-            "logScrape": true,
-            "logRegexMatching": false,
-            "logFilter": false,
-            "logMarkdown": true,
-            "logReadWrite": false,
-            "verbose": false
-        }
-    }
-}
+module.exports = {
+    "inputFile": "../data/bm2.html",
+    "output": "../data/bm2.md",
 
-module.exports = generateConfig();
+    // "exclude": [],
+    // "include": [],
+
+    "includeUnknownInMD": true,
+    // "includeEmptyHostname": true,
+
+    // "markdownPreamble": "# anchor-to-markdown\n\n",
+
+    // "debugAllTheThings": true,
+    "logFn": true,
+    // "verbose": true,
+
+    // "logReadWrite": true,
+    // "logGather": true,
+    // "logFilter": true,
+    "logFinalMarkdown": true,
+
+    // "logScrape": true,
+    // "logRegex": true,
+    // "logMarkdown": true,
+};

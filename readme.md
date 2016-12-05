@@ -1,4 +1,4 @@
-# Anchor to Markdown converter 0.0.8
+# Anchor to Markdown converter 0.0.9
 
 ## Usage
 

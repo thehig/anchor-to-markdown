@@ -1,6 +1,6 @@
 {
     "name": "anchor-to-markdown",
-    "version": "0.0.8",
+    "version": "0.0.9",
     "description": "Tool to extract anchor tags from a html document, filter them by regex collections, and convert them into a nicely formatted markdown document",
     "main": "app/app.js",
     "scripts": {
