@@ -1,7 +1,7 @@
 module.exports = {
-    "inputFile": "../data/bm2.html",
-    "output": "../data/bm2.md",
-    'selector': 'li',
+    "inputFile": "../data/target.html",
+    "output": "../data/target.md",
+    'selector': 'a',
 
     // "exclude": ["something"],
     // "include": ["nothing"],
@@ -12,12 +12,12 @@ module.exports = {
     // "invertOutputOrder": true,
 
     // Header for the markdown document
-    "markdownPreamble": "# anchor-to-markdown\n\n",
+    // "markdownPreamble": "# anchor-to-markdown\n\n",
 
     // Generic debug flags
 
-    "debugAll": true,
-    "verbose": true,
+    // "debugAll": true,
+    // "verbose": true,
     // "logFn": true,
     // "logConfig": true,
 
