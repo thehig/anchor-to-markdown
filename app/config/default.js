@@ -3,7 +3,6 @@ module.exports = {
     "include": [],
 
     "includeUnknownInMD": false,
-    "includeEmptyHostname": false,
 
     "markdownPreamble": "# anchor-to-markdown\n\n",
 

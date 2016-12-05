@@ -1,7 +1,12 @@
 
 module.exports = {
+        // Selector for this module
         "selector": 'a',
 
+        // Options for this module
+        "includeEmptyHostname": false,
+
+        // Debug flags for this module
         "logScrape": false,
         "logRegex": false,
         "logMarkdown": false,
