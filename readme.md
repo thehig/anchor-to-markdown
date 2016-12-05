@@ -1,4 +1,4 @@
-# Anchor to Markdown converter 0.0.9
+# Anchor to Markdown converter 0.0.10
 
 ## Usage
 
@@ -61,7 +61,7 @@ Command | Filters
     "includeEmptyHostname": false,
     "exclude": [ "mail", "netflix", "reddit"],
     "include": [ "react", "uwp"],
-    "debugAllTheThings": false,
+    "debugAll": false,
     "debug":{
         "logFn": false,
         "logScrape": false,
@@ -93,7 +93,7 @@ markdownPreamble | What to write at the top of the markdown | `# Automated Item 
 
 Parameter | Effect
 :--- | :---
-debugAllTheThings | Toggle all debug flags in one go (excluding verbose)
+debugAll | Toggle all debug flags in one go (excluding verbose)
 logFn | Log the name of the function when called
 logScrape | Log the scrape process of whats included or excluded
 logRegexMatching | Log the regex matching process

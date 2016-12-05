@@ -1,25 +1,41 @@
 module.exports = {
     "inputFile": "../data/bm2.html",
     "output": "../data/bm2.md",
+    'selector': 'li',
 
-    // "exclude": [],
-    // "include": [],
+    // "exclude": ["something"],
+    // "include": ["nothing"],
 
-    "includeUnknownInMD": true,
-    // "includeEmptyHostname": true,
+    // Should unknown items be included in the output?
+    "includeUnknown": true,
+    // Should the output order be ascending or descending?
+    // "invertOutputOrder": true,
 
-    // "markdownPreamble": "# anchor-to-markdown\n\n",
+    // Header for the markdown document
+    "markdownPreamble": "# anchor-to-markdown\n\n",
 
-    // "debugAllTheThings": true,
-    "logFn": true,
-    // "verbose": true,
+    // Generic debug flags
+
+    "debugAll": true,
+    "verbose": true,
+    // "logFn": true,
+    // "logConfig": true,
+
+    // Debug flags for higher order functions
 
     // "logReadWrite": true,
     // "logGather": true,
     // "logFilter": true,
-    "logFinalMarkdown": true,
+    // "logCreateMD": true,
+
+    // Debug flags for scrape, regex and markdown submodules
 
     // "logScrape": true,
     // "logRegex": true,
-    // "logMarkdown": true,
+    // "logMarkdown": true
+
+    // Anchor specific options
+    // "anchor_includeEmptyHostname": true,
+    // "anchor_markdownPreamble": "# My Custom Preamble\n\n",
+
 };
