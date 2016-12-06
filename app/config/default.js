@@ -7,8 +7,9 @@ module.exports = {
     // Should the output order be ascending or descending?
     "invertOutputOrder": false,
 
-    // Header for the markdown document
+    // Header & Footer for the markdown document
     "markdownPreamble": "# anchor-to-markdown\n\n",
+    "markdownPostamble": `\n> Generated ${new Date()}\n\n`,
 
     // Generic debug flags
     "debugAll": false,

@@ -19,6 +19,14 @@
         {
             "file_exclude_patterns": [],
             "folder_exclude_patterns": [],
+            "path": "./example-configs",
+            "name": "example configs"
+        },
+
+
+        {
+            "file_exclude_patterns": [],
+            "folder_exclude_patterns": [],
             "path": "./data",
             "name": "data"
         }

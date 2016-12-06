@@ -3,16 +3,18 @@ const   jsdom = require("jsdom")
         , path = require('path')
         , _ = require('lodash');
 
+const getAbsolutePathFrom = (param) => path.resolve(process.cwd(), param); // TODO: Needs work. Not quite right
+
 const processConfigAsync = (config) => new Promise((c, e)=>{
         if(config.debugAll || config.logFn) console.log(`[*] processConfigAsync()`);
 
         // Check the input and output
-        if(typeof config === undefined) return e(new Error("config not loaded in processConfigAsync"));
-        if(typeof config.inputFile === undefined) return e(new Error("config.inputFile not loaded in processConfigAsync"));
-        if(typeof config.output === undefined) return e(new Error("config.output not loaded in processConfigAsync"));
+        if(typeof config === "undefined") return e(new Error("config not loaded in processConfigAsync"));
+        if((typeof config.inputFile === "undefined") && typeof config.inputUrl === "undefined") return e(new Error("config.inputFile and config.inputUrl not loaded in processConfigAsync"));
+        if(typeof config.output === "undefined") return e(new Error("config.output not loaded in processConfigAsync"));
 
         // Check we have a selector
-        if(typeof config.selector === undefined) return e(new Error("No config.selector loaded in processConfigAsync"));
+        if(typeof config.selector === "undefined") return e(new Error("No config.selector loaded in processConfigAsync"));
 
         // Check we have a way to scrape, regex and markdown the results of the selector
         if(typeof config.scrape !== "function") return e(new Error("No config.scrape in processConfigAsync"));
@@ -37,10 +39,10 @@ const processConfigAsync = (config) => new Promise((c, e)=>{
 // Read file specified by config.input and return the file contents
 const readFileAsync = (config) => new Promise((c, e)=>{
         if(config.debugAll || config.logFn) console.log(`[*] readFileAsync()`);
-        if(typeof config === undefined) return e(new Error("config not loaded in readFileAsync"));
-        if(typeof config.inputFile === undefined) return e(new Error("config.inputFile not loaded in readFileAsync"));
+        if(typeof config === "undefined") return e(new Error("config not loaded in readFileAsync"));
+        if(typeof config.inputFile === "undefined") return e(new Error("config.inputFile not loaded in readFileAsync"));
 
-        const filePath = path.resolve(__dirname, config.inputFile);
+        const filePath = getAbsolutePathFrom(config.inputFile);
         if(config.debugAll || config.logReadWrite) console.log(`[+] Reading input from ${filePath}`);
         fs.readFile(filePath, "utf-8", (err, data)=>{
             if(config.debugAll || config.logReadWrite) console.log(`[+] Reading input complete ()`);
@@ -48,27 +50,41 @@ const readFileAsync = (config) => new Promise((c, e)=>{
         });
     });
     
-// Load in a html file, inject jquery, create and return the DOM
-const loadJsdomAsync = (config, html) => new Promise((c, e)=>{
-        if(config.debugAll || config.logFn) console.log(`[*] loadJsdomAsync(${html.length} characters)`);
-        if(typeof html === undefined) return e(new Error("No HTML in loadJsdomAsync"));
+// Load in, inject jquery, create and return the DOM
+const loadJsdomAsync = (config) => new Promise((c, e)=>{
+        if(config.debugAll || config.logFn) console.log(`[*] loadJsdomAsync()`);
+        if(typeof config === "undefined") return e(new Error("No config loaded in loadJsdomAsync"));
+        if((typeof config.inputFile === "undefined") && (typeof config.inputUrl === "undefined")) return e(new Error("No config.inputFile or config.inputUrl loaded in loadJsdomAsync"));
 
         const jquery = fs.readFileSync('./app/lib/jquery.js', 'utf-8').toString();
-        jsdom.env({
-            html: html,
+        let jsdomConfig = {
             src: [jquery],
             done: (err, window)=> err ? e(err) : c(window)
-        });
+        }
+
+        if(config.inputUrl) {
+            console.log(`[+] Loading jsdom from url: ${config.inputUrl}`);
+            jsdomConfig.url = config.inputUrl;
+            jsdom.env(jsdomConfig);
+        } else if(config.inputFile){
+            console.log(`[+] Loading jsdom from file: ${getAbsolutePathFrom(config.inputFile)}`);
+            readFileAsync(config).then((html)=>{
+                jsdomConfig.html = html;
+                jsdom.env(jsdomConfig);
+            }, e);
+        } else {
+            return e(new Error("Unknown input in loadJsdomAsync"));
+        }
     });
 
 // Use jQuery to convert all <a> into objects
 const gatherItemsAsync = (config, scrapeItemFn, window) => new Promise((c, e)=>{
         if(config.debugAll || config.logFn) console.log(`[*] gatherItemsAsync(window)`);
         if(typeof scrapeItemFn !== "function") return e(new Error("No scrapeItemFn in gatherItemsAsync"));
-        if(typeof window === undefined) return e(new Error("No window in gatherItemsAsync"));
-        if(typeof window.$ === undefined) return e(new Error("No jquery in gatherItemsAsync"));
-        if(typeof config === undefined) return e(new Error("No config loaded in gatherItemsAsync"));
-        if(typeof config.selector === undefined) return e(new Error("No config.selector loaded in gatherItemsAsync"));
+        if(typeof window === "undefined") return e(new Error("No window in gatherItemsAsync"));
+        if(typeof window.$ === "undefined") return e(new Error("No jquery in gatherItemsAsync"));
+        if(typeof config === "undefined") return e(new Error("No config loaded in gatherItemsAsync"));
+        if(typeof config.selector === "undefined") return e(new Error("No config.selector loaded in gatherItemsAsync"));
         const $ = window.$;
         let items = [];
         try{
@@ -95,10 +111,10 @@ const gatherItemsAsync = (config, scrapeItemFn, window) => new Promise((c, e)=>{
 const filterItemsAsync = (config, regexTestFn, items) => new Promise((c, e)=>{
         if(config.debugAll || config.logFn) console.log(`[*] filterItemsAsync(${items.length} items)`);
         if(typeof regexTestFn !== "function") return e(new Error("No regexTestFn in filterItemsAsync"));
-        if(typeof items === undefined) return e(new Error("No items in filterItemsAsync"));
-        if(typeof config === undefined) return e(new Error("No config loaded"));
-        if(typeof config.include === undefined) return e(new Error("No config.include loaded in filterItemsAsync"));
-        if(typeof config.exclude === undefined) return e(new Error("No config.exclude loaded in filterItemsAsync"));
+        if(typeof items === "undefined") return e(new Error("No items in filterItemsAsync"));
+        if(typeof config === "undefined") return e(new Error("No config loaded"));
+        if(typeof config.include === "undefined") return e(new Error("No config.include loaded in filterItemsAsync"));
+        if(typeof config.exclude === "undefined") return e(new Error("No config.exclude loaded in filterItemsAsync"));
 
         // Convert our provided strings into regexes (ignoring case)
         const createRegex = regexString => new RegExp(regexString, 'i');
@@ -148,8 +164,8 @@ const filterItemsAsync = (config, regexTestFn, items) => new Promise((c, e)=>{
 
 const sortAndMergeItemsAsync = (config, sortedItems) => new Promise((c, e) =>{
         if(config.debugAll || config.logFn) console.log(`[*] sortAndMergeItemsAsync()`);
-        if(typeof sortedItems === undefined) return e(new Error("No items in sortAndMergeItemsAsync"));
-        if(typeof config === undefined) return e(new Error("No config loaded"));
+        if(typeof sortedItems === "undefined") return e(new Error("No items in sortAndMergeItemsAsync"));
+        if(typeof config === "undefined") return e(new Error("No config loaded"));
 
         let sourceList = [].concat(sortedItems.include);
         if(config.includeUnknown) {
@@ -166,17 +182,20 @@ const sortAndMergeItemsAsync = (config, sortedItems) => new Promise((c, e) =>{
 const createMarkdownAsync = (config, convertToMarkdownFn, items) => new Promise((c, e)=>{
         if(config.debugAll || config.logFn) console.log(`[*] createMarkdownAsync(items)`);
         if(typeof convertToMarkdownFn !== "function") return e(new Error("No convertToMarkdownFn in createMarkdownAsync"));
-        if(typeof items === undefined) return e(new Error("No items in createMarkdownAsync"));
-        if(typeof config === undefined) return e(new Error("No config loaded in createMarkdownAsync"));
-        if(typeof config.markdownPreamble === undefined) return e(new Error("No config.markdownPreamble loaded in createMarkdownAsync"));
+        if(typeof items === "undefined") return e(new Error("No items in createMarkdownAsync"));
+        if(typeof config === "undefined") return e(new Error("No config loaded in createMarkdownAsync"));
+        if(typeof config.markdownPreamble === "undefined") return e(new Error("No config.markdownPreamble loaded in createMarkdownAsync"));
+        if(typeof config.markdownPostamble === "undefined") return e(new Error("No config.markdownPostamble loaded in createMarkdownAsync"));
 
         if(config.debugAll || config.logCreateMD) console.log(`[+] Creating markdown from items`);
 
         // Convert each item into a MD entry
-        const outputMarkdown = items.reduce((previous, item) => {
+        let outputMarkdown = items.reduce((previous, item) => {
             let markdown = convertToMarkdownFn(item);
             return "" + (markdown ? previous + markdown : previous) + "\n";
         }, config.markdownPreamble);
+
+        outputMarkdown += config.markdownPostamble;
 
         if(config.debugAll || config.logCreateMD) console.log(`[*] ===== Output Markdown =====\n${outputMarkdown}[*] ==== /Output Markdown/ ====`);
         c(outputMarkdown);
@@ -185,11 +204,11 @@ const createMarkdownAsync = (config, convertToMarkdownFn, items) => new Promise(
 // Write the text in inputString to the file specified by config.input
 const writeFileAsync = (config, inputString) => new Promise((c, e)=>{
         if(config.debugAll || config.logFn) console.log(`[*] writeFileAsync(${inputString.length} characters)`);
-        if(typeof inputString === undefined) return e(new Error("No inputString in writeFileAsync"));
-        if(typeof config === undefined) return e(new Error("config not loaded in writeFileAsync"));
-        if(typeof config.output === undefined) return e(new Error("config.output not loaded in writeFileAsync"));
+        if(typeof inputString === "undefined") return e(new Error("No inputString in writeFileAsync"));
+        if(typeof config === "undefined") return e(new Error("config not loaded in writeFileAsync"));
+        if(typeof config.output === "undefined") return e(new Error("config.output not loaded in writeFileAsync"));
 
-        const filePath = path.resolve(__dirname, config.output);
+        const filePath = getAbsolutePathFrom(config.output);
         if(config.debugAll || config.logReadWrite) console.log(`[+] Writing output to ${filePath}`);
         
         fs.writeFile(filePath, inputString, {flags: 'w'}, (err)=>{

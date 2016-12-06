@@ -1,6 +1,7 @@
 module.exports = {
-    "inputFile": "../data/target.html",
-    "output": "../data/target.md",
+    // "inputFile": "../data/target.html",
+    // "inputUrl": "http://www.google.com",
+    // "output": "data/target.md",
     'selector': 'a',
 
     // "exclude": ["something"],
