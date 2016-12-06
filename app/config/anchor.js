@@ -28,7 +28,7 @@ module.exports = {
 
         // check an items 'url' and 'text' against a regex
         regex: (config, item, regex) => {
-            if(config.debugAll || (config.verbose && config.logFn)) console.log(`[R] anchorRegex(item, ${regex})`);
+            if(config.debugAll || (config.verbose && config.logFn)) console.log(`[R] anchorRegex(${item.text}, ${regex})`);
             const matchesUrl = regex.test(item.url);
             const matchesText = regex.test(item.text);
             if(config.debugAll || config.logRegex){
@@ -38,26 +38,10 @@ module.exports = {
             return matchesUrl || matchesText;
         },
 
-        markdown: (config, sortedItems) =>{
-
-            if(config.debugAll || (config.verbose && config.logFn)) console.log(`[M] markdown(sortedItems)`);
-            // Take the include, and optionally the unknown
-            let sourceList = [].concat(sortedItems.include);
-            if(config.includeUnknown) {
-                console.log(`[+] Including ${sortedItems.unknown.length} unknown items in markdown`);
-                sourceList = sourceList.concat(sortedItems.unknown);
-            }
-
-            // Sort in order with the lowest index first (config.invertOutputOrder switches the sorting order)
-            sourceList = sourceList.sort((a, b)=> {return config.invertOutputOrder ? b.index - a.index : a.index - b.index;});
-
-            // Convert each item into a MD entry
-            const outputMarkdown = sourceList.reduce((previous, item) => {
-                const addition = `* *(${item.hostname})* [${item.text}](${item.url})`;
-                if(config.debugAll || config.logMarkdown) console.log(`[+] Created markdown: ${addition}`);
-                return "" + previous + addition + "\n";
-            }, config.markdownPreamble);
-
-            return outputMarkdown;
+        markdown: (config, item) =>{
+            if(config.debugAll || (config.verbose && config.logFn)) console.log(`[M] markdown(${item.text})`);
+            const addition = `* *(${item.hostname})* [${item.text}](${item.url})`;
+            if(config.debugAll || config.logMarkdown) console.log(`[+] Created markdown: ${addition}`);
+            return addition;
         }
 }

@@ -53,7 +53,7 @@ const loadJsdomAsync = (config, html) => new Promise((c, e)=>{
         if(config.debugAll || config.logFn) console.log(`[*] loadJsdomAsync(${html.length} characters)`);
         if(typeof html === undefined) return e(new Error("No HTML in loadJsdomAsync"));
 
-        const jquery = fs.readFileSync('./app/jquery.js', 'utf-8').toString();
+        const jquery = fs.readFileSync('./app/lib/jquery.js', 'utf-8').toString();
         jsdom.env({
             html: html,
             src: [jquery],
@@ -145,17 +145,38 @@ const filterItemsAsync = (config, regexTestFn, items) => new Promise((c, e)=>{
         c(filtered);
     });
 
-// From the sortedItems, convert the 'include' items into markdown
-const createMarkdownAsync = (config, convertToMarkdownFn, sortedItems) => new Promise((c, e)=>{
-        if(config.debugAll || config.logFn) console.log(`[*] createMarkdownAsync(sortedItems)`);
+
+const sortAndMergeItemsAsync = (config, sortedItems) => new Promise((c, e) =>{
+        if(config.debugAll || config.logFn) console.log(`[*] sortAndMergeItemsAsync()`);
+        if(typeof sortedItems === undefined) return e(new Error("No items in sortAndMergeItemsAsync"));
+        if(typeof config === undefined) return e(new Error("No config loaded"));
+
+        let sourceList = [].concat(sortedItems.include);
+        if(config.includeUnknown) {
+            console.log(`[+] Including ${sortedItems.unknown.length} unknown items in markdown`);
+            sourceList = sourceList.concat(sortedItems.unknown);
+        }
+
+        // Sort in order with the lowest index first (config.invertOutputOrder switches the sorting order)
+        if(config.debugAll || config.logSort) console.log(`[+] Sorting in ${config.invertOutputOrder ? 'ascending' : 'descending'} order`);
+        c(sourceList.sort((a, b)=> {return config.invertOutputOrder ? b.index - a.index : a.index - b.index;}));
+    });
+
+// Convert the items into markdown
+const createMarkdownAsync = (config, convertToMarkdownFn, items) => new Promise((c, e)=>{
+        if(config.debugAll || config.logFn) console.log(`[*] createMarkdownAsync(items)`);
         if(typeof convertToMarkdownFn !== "function") return e(new Error("No convertToMarkdownFn in createMarkdownAsync"));
-        if(typeof sortedItems === undefined) return e(new Error("No sortedItems in createMarkdownAsync"));
+        if(typeof items === undefined) return e(new Error("No items in createMarkdownAsync"));
         if(typeof config === undefined) return e(new Error("No config loaded in createMarkdownAsync"));
         if(typeof config.markdownPreamble === undefined) return e(new Error("No config.markdownPreamble loaded in createMarkdownAsync"));
 
-        if(config.debugAll || config.logCreateMD) console.log(`[+] Creating markdown from sortedItems`);
+        if(config.debugAll || config.logCreateMD) console.log(`[+] Creating markdown from items`);
 
-        const outputMarkdown = convertToMarkdownFn(sortedItems);
+        // Convert each item into a MD entry
+        const outputMarkdown = items.reduce((previous, item) => {
+            let markdown = convertToMarkdownFn(item);
+            return "" + (markdown ? previous + markdown : previous) + "\n";
+        }, config.markdownPreamble);
 
         if(config.debugAll || config.logCreateMD) console.log(`[*] ===== Output Markdown =====\n${outputMarkdown}[*] ==== /Output Markdown/ ====`);
         c(outputMarkdown);
@@ -189,6 +210,7 @@ module.exports = (config, scrapeItemFn, regexTestFn, convertToMarkdownFn)=>{
         loadJsdomAsync: loadJsdomAsync.bind(null, config),
         gatherItemsAsync: gatherItemsAsync.bind(null, config, myScrapeItemFn),
         filterItemsAsync: filterItemsAsync.bind(null, config, myRegexTestFn),
+        sortAndMergeItemsAsync: sortAndMergeItemsAsync.bind(null, config),
         createMarkdownAsync: createMarkdownAsync.bind(null, config, myConvertToMarkdownFn),
         writeFileAsync: writeFileAsync.bind(null, config)
     };

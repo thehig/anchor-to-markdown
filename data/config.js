@@ -16,7 +16,7 @@ module.exports = {
 
     // Generic debug flags
 
-    // "debugAll": true,
+    "debugAll": true,
     // "verbose": true,
     // "logFn": true,
     // "logConfig": true,

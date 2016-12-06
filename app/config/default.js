@@ -20,6 +20,7 @@ module.exports = {
     "logReadWrite": false,
     "logGather": false,
     "logFilter": false,
+    "logSort": false,
     "logCreateMD": false,
 
     // Debug flags for scrape, regex and markdown submodules
