@@ -47,13 +47,17 @@ const readFileAsync = (config) => new Promise((c, e)=>{
             err ? e(err) : c(data);
         });
     });
-
+    
 // Load in a html file, inject jquery, create and return the DOM
 const loadJsdomAsync = (config, html) => new Promise((c, e)=>{
         if(config.debugAll || config.logFn) console.log(`[*] loadJsdomAsync(${html.length} characters)`);
         if(typeof html === undefined) return e(new Error("No HTML in loadJsdomAsync"));
-        jsdom.env(html, ["http://code.jquery.com/jquery.js"], (err, window)=>{
-            err ? e(err) : c(window);
+
+        const jquery = fs.readFileSync('./app/jquery.js', 'utf-8').toString();
+        jsdom.env({
+            html: html,
+            src: [jquery],
+            done: (err, window)=> err ? e(err) : c(window)
         });
     });
 
