@@ -19,12 +19,13 @@ parseOptsAsync = ()=> new Promise((c, e)=>{
         const switches = [
 
             ['-i', '--input INPUTFILE', 'Input file to be processed']
+            , ['-u', '--url URL', 'URL to site to process']
+
             , ['-o', '--output OUTPUTFILE', 'Output file to write to']
             
-            , ['-u', '--url URL', 'URL to site to process']
-            , ['-s', '--selector SELECTOR', 'CSS selector to scrape for']
+            , ['-s', '--selector SELECTOR', `CSS selector to scrape for (${Object.keys(selectorConfigs).join("|")})`]
 
-            , ['-c', '--config CONFIGFILE', 'Config file to read from (Overrides switches)']
+            , ['-c', '--config CONFIGFILE', 'Config file to read from (switches take priority)']
 
             , ['-d', '--debug', 'Enable all debug flags']
             , ['-v', '--verbose', 'More output']
@@ -71,7 +72,9 @@ parseOptsAsync = ()=> new Promise((c, e)=>{
                 const userSpecifiedConfig = process.cwd() + "\\" + promptConfig.configurl;
                 console.log(`[+] Loading config from file ${userSpecifiedConfig}`);
                 let configFromFile = require(userSpecifiedConfig);
-                Object.assign(promptConfig, configFromFile);
+
+                // Prioritize inputs from the prompt over the config file
+                promptConfig = Object.assign({}, configFromFile, promptConfig);
             }
         } catch(err){
             showUsage(-1, `Unable to parse options: ${err}`);
